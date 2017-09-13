@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css"
+      integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M"
+      crossorigin="anonymous">
+    <style type="text/css">
+      .card {
+        margin: 16px;
+      }
+    </style>
+    <title>What's in localStorage</title>
+  </head>
+  <body>
+    <template id="dbEntry">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <button type="button" class="close" aria-label="Delete">
+              <span aria-hidden="true">&times;</span>
+            </button>
+            <h4 class="card-title">KEY_HERE</h4>
+            <p class="card-text">VALUE_HERE</p>
+          </div>
+        </div>
+      </div>
+    </template>
+    <div class="container">
+      <div id="dbEntries" class="row">
+        <!-- dbEntry[] -->
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">Add New Entry</h4>
+          <form id="frmAdd">
+            <div class="form-group row">
+              <label for="newKey" class="col-sm-2 col-form-label">Key</label>
+              <div class="col-sm-10"><input id="newKey" type="text" class="form-control"></div>
+            </div>
+            <div class="form-group row">
+              <label for="newVal" class="col-sm-2 col-form-label">Value</label>
+              <div class="col-sm-10"><input id="newVal" type="text" class="form-control"></div>
+            </div>
+            <button id="addBtn" type="submit" class="btn btn-success">Add Value</button>
+          </form>
+        </div>
+      </div>
+      <div class="card">
+        <button id="clearBtn" type="button" class="btn btn-danger">Clear Storage</button>
+      </div>
+    </div>
+    <script type="text/javascript">
+      'use strict';
+
+      let dbEntries = document.getElementById('dbEntries');
+      let newK = document.getElementById('newKey');
+      let newV = document.getElementById('newVal');
+      let frmAdd = document.getElementById('frmAdd');
+      let btnClear = document.getElementById('clearBtn');
+      let btnAdd = document.getElementById('addBtn');
+
+      const frmAddNewEntry = (e) => {
+        e.preventDefault();
+        addNewEntry();
+      }
+
+      const editItem = (k) => {
+        console.log(k);
+        newK.value = k;
+        newV.value = localStorage.getItem(k);
+        newK.disabled = true;
+        btnAdd.textContent = 'Edit Value';
+        btnAdd.className = 'btn btn-warning';
+      }
+
+      const deleteItem = (k) => {
+        if (confirm('Delete key: ' + k + '?')) {
+          localStorage.removeItem(k);
+          buildItemList();
+        }
+      }
+
+      const addNewEntry = () => {
+        if (newK.value.length > 0 && newV.value.length > 0) {
+          localStorage.setItem(newK.value, newV.value);
+          buildItemList();
+          newK.value = '';
+          newV.value = '';
+          newK.focus();
+          newK.disabled = false;
+          btnAdd.textContent = 'Add Value';
+          btnAdd.className = 'btn btn-success';
+        }
+      };
+
+      const addEntry = (k,v) => {
+        let tpl = document.querySelector('#dbEntry');
+        tpl.content.querySelector('.card-title').textContent = k;
+        tpl.content.querySelector('.card-text').textContent = v;
+
+        let entry = document.importNode(tpl.content, true);
+        entry.querySelector('.card-body')
+          .addEventListener('mouseup', (e) => editItem(k));
+        entry.querySelector('.close')
+          .addEventListener('mouseup', (e) => {
+            e.stopPropagation();
+            deleteItem(k);
+          });
+        dbEntries.appendChild(entry);
+      };
+
+      const clearEntryList = () => {
+        while (dbEntries.hasChildNodes()) {
+          dbEntries.removeChild(dbEntries.lastChild)
+        }
+      };
+
+      const buildItemList = () => {
+        clearEntryList();
+        let keys = Object.keys(localStorage);
+        for (let i in keys) {
+          let k = keys[i];
+          let v = localStorage.getItem(k);
+          addEntry(k,v);
+        }
+      };
+
+      const clearStorage = () => {
+        if (confirm('Delete *ALL* data in local storage?')) {
+          let keys = Object.keys(localStorage);
+          for (let i in keys) {
+            let k = keys[i];
+            localStorage.removeItem(k);
+          }
+          buildItemList();
+        }
+      };
+
+      frmAdd.addEventListener('submit', frmAddNewEntry);
+      btnClear.addEventListener('click', clearStorage);
+
+      buildItemList();
+    </script>
+  </body>
+</html>
